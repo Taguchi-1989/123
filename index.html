@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>英検レベル別クイズ (トップへ戻るボタン修正確認)</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  /* --- ▼▼▼ 基本的なスタイルとレベル選択画面のスタイル ▼▼▼ --- */
+  body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 10px;
+    box-sizing: border-box;
+    font-family: sans-serif;
+  }
+
+  #levelSelection {
+    text-align: center;
+    background-color: white;
+    padding: 40px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    max-width: 400px; /* 最大幅設定 */
+    width: 90%;
+  }
+
+  #levelSelection h1 {
+    color: #333;
+    margin-bottom: 30px;
+    font-size: 1.8em;
+  }
+
+  .levelButton {
+    display: block; /* ボタンを縦に並べる */
+    width: 100%; /* 幅をコンテナに合わせる */
+    padding: 15px 20px;
+    margin-bottom: 15px; /* ボタン間の余白 */
+    font-size: 1.2em;
+    font-weight: bold;
+    color: white;
+    background-color: #007bff; /* 青色 */
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    box-sizing: border-box; /* paddingを含めて幅100%にする */
+  }
+
+  .levelButton:hover {
+    background-color: #0056b3; /* 少し濃い青 */
+  }
+
+  .levelButton:active {
+      transform: scale(0.98); /* クリック時に少し縮む */
+  }
+
+  /* 'disabled' class is no longer needed for buttons, but kept for potential future use */
+  .levelButton.disabled {
+      background-color: #cccccc; /* グレー */
+      cursor: not-allowed;
+      opacity: 0.7;
+  }
+  /* --- ▲▲▲ 基本的なスタイルとレベル選択画面のスタイル ▲▲▲ --- */
+
+  canvas {
+    border: 1px solid #ccc;
+    background-color: white;
+    max-width: 100%;
+    display: block; /* Controlled by JS */
+    cursor: pointer;
+    touch-action: none; /* Prevent default touch actions like scrolling */
+    margin-bottom: 20px;
+    position: relative; /* Needed for absolute positioning of buttons inside if desired */
+    /* display: none; /* Initial state controlled by JS */
+  }
+
+  #certificateContainer {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      /* display: none; /* Initial state controlled by JS */
+  }
+
+  /* --- ▼▼▼ Certificate Styles (Unchanged) ▼▼▼ --- */
+  #certificate {
+    background-color: #FFFFF0; /* Ivory */
+    border: 8px double #DAA520; /* Goldenrod double border */
+    padding: 40px; /* Increased padding */
+    max-width: 550px; /* Slightly wider max-width */
+    width: 90%;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2), inset 0 0 5px rgba(218, 165, 32, 0.3); /* Outer shadow + inner gold glow */
+    text-align: center;
+    margin-bottom: 25px; /* Adjusted bottom margin */
+    position: relative; /* For ::before pseudo-element */
+    overflow: hidden; /* To contain ::before */
+  }
+  #certificate h2 {
+    color: #004d00; /* Dark green */
+    border-bottom: 2px solid #DAA520; /* Gold underline */
+    padding-bottom: 15px; /* Spacing below underline */
+    margin-bottom: 25px; /* Bottom margin */
+    font-size: 1.8em; /* Slightly larger */
+    letter-spacing: 1px; /* Letter spacing */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1); /* Subtle text shadow */
+  }
+  #certificate p {
+    margin: 18px 0; /* Adjusted vertical margin */
+    font-size: 1.15em; /* Slightly larger */
+    line-height: 1.6; /* Line height */
+  }
+  #certificate strong {
+      color: #004d00; /* Dark green */
+      font-weight: bold;
+  }
+  #certificate input[type="text"] {
+    padding: 10px; /* Adjusted padding */
+    margin-top: 5px;
+    margin-bottom: 25px; /* Adjusted bottom margin */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 80%;
+    max-width: 300px;
+    font-size: 1em;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); /* Inner shadow */
+  }
+  #certificate button {
+    padding: 12px 25px; /* Adjusted padding */
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-top: 15px; /* Adjusted top margin */
+    margin-left: 8px;
+    margin-right: 8px;
+    transition: background-color 0.3s ease; /* Smooth hover effect */
+  }
+  #certificate button:hover {
+    background-color: #0056b3;
+  }
+
+  /* Optional: Seal-like decoration */
+  #certificate::before {
+    content: "";
+    position: absolute;
+    bottom: -20px; /* Position adjustment */
+    right: -20px;  /* Position adjustment */
+    width: 80px;   /* Size */
+    height: 80px;  /* Size */
+    background: radial-gradient(circle, #FBF5B7 20%, #DAA520 80%); /* Gold gradient */
+    border-radius: 50%;
+    border: 4px solid #B38728; /* Darker gold border */
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    z-index: 0; /* Behind text */
+  }
+  /* Ensure text and buttons are above the seal */
+  #certificate > * {
+      position: relative;
+      z-index: 1;
+  }
+  /* --- ▲▲▲ Certificate Styles (Unchanged) ▲▲▲ --- */
+
+  /* Print Info Styles (Unchanged) */
+  #printInfo {
+    background-color: #e9f5ff;
+    border: 1px solid #b3d7ff;
+    padding: 15px;
+    max-width: 550px; /* Match certificate */
+    width: 90%;
+    border-radius: 5px;
+    font-size: 0.9em;
+    color: #333;
+    text-align: left;
+    line-height: 1.5;
+  }
+  #printInfo strong {
+      color: #0056b3;
+  }
+  #printInfo .highlight {
+      color: red;
+      font-weight: bold;
+  }
+
+  /* Print Styles (Unchanged) */
+  @media print {
+    body {
+        background-color: #f0f0f0 !important;
+        display: block;
+        padding: 0;
+        margin: 0;
+    }
+    /* Hide level selection, canvas, print info, and certificate buttons */
+    #levelSelection, canvas, #printInfo, #certificate button {
+      display: none !important;
+      visibility: hidden !important;
+    }
+    /* Show certificate container */
+    #certificateContainer {
+        display: block !important;
+        visibility: visible !important;
+        width: 100%;
+    }
+    /* Show certificate and its contents */
+    #certificate, #certificate * {
+      visibility: visible !important;
+    }
+    #certificate {
+      position: static;
+      width: 90%;
+      max-width: none;
+      padding: 15mm;
+      margin: 0 auto;
+      /* Keep screen styles for certificate appearance */
+    }
+    /* Adjust input field for printing */
+    #certificate input[type="text"] {
+        border: none !important;
+        border-bottom: 1px solid #555 !important; /* Underline only */
+        border-radius: 0 !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        color: black !important; /* Ensure text is black */
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div id="levelSelection">
+    <h1>英検レベル別クイズ</h1>
+    <button class="levelButton" data-level="3級">英検 3級</button>
+    <button class="levelButton" data-level="2級">英検 2級</button>
+    <button class="levelButton" data-level="1級">英検 1級</button>
+  </div>
+
+  <canvas id="quizCanvas" width="400" height="600" style="display: none;"></canvas>
+
+  <div id="certificateContainer" style="display: none;">
+      </div>
+
+  <script>
+    // Execute when the page is fully loaded
+    window.onload = function() {
+      // --- Get HTML Elements ---
+      const levelSelectionDiv = document.getElementById('levelSelection');
+      const levelButtons = document.querySelectorAll('.levelButton');
+      const canvas = document.getElementById('quizCanvas');
+      const certificateContainer = document.getElementById('certificateContainer');
+      const ctx = canvas.getContext('2d');
+
+      // --- ▼▼▼ Quiz Data by Level (Correct Answer Distribution Adjusted) ▼▼▼ ---
+      const quizDataByLevel = {
+          '3級': [
+                // (Correct answer distribution adjusted)
+                { questionA: "A: Excuse me, where is the library?", questionB: "B: _______", options: ["1. It's open from 9 a.m. to 5 p.m.", "2. Go straight for two blocks. It's on your left.", "3. I borrowed three books yesterday.", "4. Yes, I like reading books."], correct: 2, explanation: "場所を尋ねられているので、道順を答えるのが自然です。" },
+                { questionA: "A: This bag looks heavy.", questionB: "B: _______", options: ["1. It's a new bag.", "2. I bought it yesterday.", "3. Let me help you carry it.", "4. Be careful."], correct: 3, explanation: "重そうな相手に「手伝いましょうか」と申し出る表現です。" },
+                { questionA: "A: What time does the movie start?", questionB: "B: _______", options: ["1. I saw it last week.", "2. The ticket is 1,000 yen.", "3. It starts at seven thirty.", "4. It's a very interesting movie."], correct: 3, explanation: "開始時間を聞かれているので、時刻で答えます。" },
+                { questionA: "A: How about playing tennis this weekend?", questionB: "B: _______", options: ["1. I don't have a racket.", "2. Tennis is a fun sport.", "3. Yes, I went there last weekend.", "4. Sorry, I have other plans."], correct: 4, explanation: "提案に対して都合が悪く断る際の一般的な表現です。" },
+                { questionA: "A: What do you like to do in your free time?", questionB: "B: _______", options: ["1. I have a lot of homework.", "2. My favorite subject is English.", "3. I enjoy listening to music.", "4. I usually go to bed at ten."], correct: 3, explanation: "自由時間に何をするか尋ねられているので、趣味を答えます。" },
+                { questionA: "A: Are you free next Saturday?", questionB: "B: _______", options: ["1. Yes, it was fun.", "2. Yes. Do you have any plans?", "3. I went shopping.", "4. It will be sunny."], correct: 2, explanation: "予定を尋ねられ、空いていると答えた後、相手の意図を尋ねる自然な流れです。" },
+                { questionA: "A: You don't look well. What's wrong?", questionB: "B: _______", options: ["1. I'm going to the park.", "2. Thank you for asking.", "3. It's a beautiful day.", "4. I think I have a cold."], correct: 4, explanation: "体調が悪そうだと指摘され、理由を答えています。" },
+                { questionA: "A: Can I take your order?", questionB: "B: _______", options: ["1. Yes, I made a reservation.", "2. The food was delicious.", "3. I'll have a hamburger and a cola, please.", "4. Can I have the check, please?"], correct: 3, explanation: "店員に注文を聞かれているので、注文内容を伝えます。" },
+                { questionA: "A: Hello? May I speak to Ken?", questionB: "B: _______", options: ["1. He is my brother.", "2. Nice talking to you.", "3. Sure. Hold on a moment, please.", "4. He went to the park."], correct: 3, explanation: "電話で相手に取り次ぎを頼まれた際の定型表現です。" },
+                { questionA: "A: Whose notebook is this?", questionB: "B: _______", options: ["1. It's on the desk.", "2. Oh, it's mine. Thank you.", "3. I bought it yesterday.", "4. Please write your name here."], correct: 2, explanation: "誰の持ち物か尋ねられ、自分のものだと答えています。" },
+                { questionA: "A: How was your weekend?", questionB: "B: _______", options: ["1. It will be sunny tomorrow.", "2. I have a test next week.", "3. It was great! I went hiking.", "4. My weekend is busy."], correct: 3, explanation: "週末がどうだったか聞かれているので、感想と出来事を答えます。" },
+                { questionA: "A: What kind of music do you like?", questionB: "B: _______", options: ["1. I often go to concerts.", "2. I like pop music.", "3. Music is relaxing.", "4. I can play the piano."], correct: 2, explanation: "好きな音楽の種類を尋ねられているので、具体的なジャンルを答えます。" },
+                { questionA: "A: It's hot today, isn't it?", questionB: "B: _______", options: ["1. Yes, it is. Let's get some ice cream.", "2. No, it was cold yesterday.", "3. I like hot weather.", "4. Please close the window."], correct: 1, explanation: "同意を求める付加疑問文に対し、同意して提案する自然な返答です。" },
+                { questionA: "A: Could you tell me the way to the station?", questionB: "B: _______", options: ["1. The train is coming soon.", "2. Turn right at the next corner.", "3. I often use the station.", "4. It takes about 10 minutes."], correct: 2, explanation: "道順を尋ねられているので、具体的な指示で答えます。" },
+                { questionA: "A: What would you like for breakfast?", questionB: "B: _______", options: ["1. I had toast yesterday.", "2. Breakfast is important.", "3. I'm hungry now.", "4. I usually have cereal and milk."], correct: 4, explanation: "朝食に何が欲しいか聞かれているので、普段食べるものを答えています。" },
+                { questionA: "A: I'm going to the supermarket. Do you need anything?", questionB: "B: _______", options: ["1. The supermarket is near here.", "2. Yes, can you get some milk?", "3. I went there yesterday.", "4. Thank you for asking."], correct: 2, explanation: "何か必要か聞かれ、具体的な買い物をお願いしています。" },
+                { questionA: "A: Happy birthday, Lisa!", questionB: "B: _______", options: ["1. Thank you very much!", "2. When is your birthday?", "3. I like birthday cake.", "4. It's a surprise party."], correct: 1, explanation: "誕生日のお祝いに対する最も一般的な返答です。" },
+                { questionA: "A: How many people are there in your family?", questionB: "B: _______", options: ["1. My family lives in Osaka.", "2. There are four people: my parents, my sister, and me.", "3. I love my family.", "4. We have a dog."], correct: 2, explanation: "家族の人数を尋ねられているので、具体的な人数と構成を答えます。" },
+                { questionA: "A: What's your favorite season?", questionB: "B: _______", options: ["1. It often rains in June.", "2. Winter is cold.", "3. I like spring because of the cherry blossoms.", "4. There are four seasons in Japan."], correct: 3, explanation: "好きな季節を聞かれ、理由とともに答えています。" },
+                { questionA: "A: Can you swim?", questionB: "B: _______", options: ["1. Swimming is good exercise.", "2. I often go to the pool.", "3. Yes, I can swim well.", "4. The water is cold."], correct: 3, explanation: "能力を尋ねる Can you...? に対し、できるかどうかで答えます。" },
+                { questionA: "A: What did you do last night?", questionB: "B: _______", options: ["1. I will watch TV tonight.", "2. Last night was fun.", "3. I studied for the English test.", "4. I usually go to bed early."], correct: 3, explanation: "昨夜何をしたかという過去の行動について尋ねられています。" },
+                { questionA: "A: May I borrow your pen?", questionB: "B: _______", options: ["1. This pen is blue.", "2. Sure, here you are.", "3. I bought it yesterday.", "4. Where is your pen?"], correct: 2, explanation: "物を貸してほしいという依頼に対する許可の返答です。" },
+                { questionA: "A: Let's go shopping tomorrow.", questionB: "B: _______", options: ["1. I like shopping.", "2. That sounds good!", "3. Where did you go?", "4. I need new shoes."], correct: 2, explanation: "提案に対する同意の表現です。" },
+                { questionA: "A: What subject do you like the best?", questionB: "B: _______", options: ["1. School starts at 8:30.", "2. I like math because it's interesting.", "3. My teacher is kind.", "4. I have many subjects."], correct: 2, explanation: "一番好きな科目を尋ねられ、理由とともに答えています。" },
+                { questionA: "A: How do you come to school?", questionB: "B: _______", options: ["1. School is far from here.", "2. I come by bus.", "3. My friend comes by bike.", "4. It takes 20 minutes."], correct: 2, explanation: "通学方法を尋ねられているので、交通手段で答えます。" },
+                { questionA: "A: It's raining outside.", questionB: "B: _______", options: ["1. I like rain.", "2. It was sunny yesterday.", "3. Really? You should take an umbrella.", "4. Let's play outside."], correct: 3, explanation: "雨が降っている状況に対し、傘を持っていくようアドバイスしています。" },
+                { questionA: "A: What are you going to do this afternoon?", questionB: "B: _______", options: ["1. I went to the library this morning.", "2. I'm going to play soccer with my friends.", "3. This afternoon is sunny.", "4. I have no plans."], correct: 2, explanation: "午後の予定を尋ねられ、具体的な行動を答えています。" },
+                { questionA: "A: Excuse me, is this seat taken?", questionB: "B: _______", options: ["1. Yes, I took this train.", "2. No, it's free. Please sit down.", "3. This is my seat.", "4. Where are you going?"], correct: 2, explanation: "席が空いているか尋ねられ、空いていると答えて座るよう促しています。" },
+                { questionA: "A: I lost my wallet.", questionB: "B: _______", options: ["1. I found your wallet.", "2. My wallet is new.", "3. That's too bad. Where did you lose it?", "4. Let's buy a new wallet."], correct: 3, explanation: "困っている相手に同情し、詳細を尋ねる自然な反応です。" },
+                { questionA: "A: Would you like some more juice?", questionB: "B: _______", options: ["1. Juice is sweet.", "2. I like orange juice.", "3. Yes, please. I'm still thirsty.", "4. No, thank you. I'm full."], correct: 4, explanation: "飲み物のおかわりを勧められ、丁寧に断る表現です。（Yes, please. も正解になりえますが、ここではNo, thank you. を正解としています）" }
+          ],
+          '2級': [
+                // (Correct answer distribution adjusted)
+                { questionA: "A: The presentation is tomorrow. Are you ready?", questionB: "B: Almost. _______", options: ["1. The meeting was postponed.", "2. I still need to finalize the conclusion slides.", "3. I presented it last week.", "4. It's about market trends."], correct: 2, explanation: "準備状況を聞かれ、「ほぼ完了だが、結論スライドを最終決定する必要がある」と具体的に答えています。" },
+                { questionA: "A: I heard you got a promotion. Congratulations!", questionB: "B: Thanks! _______", options: ["1. I'm looking for a new job.", "2. It comes with a lot more responsibility, though.", "3. The company is downsizing.", "4. My boss was transferred."], correct: 2, explanation: "昇進祝いに対し、感謝しつつも責任が増えることを付け加えています。" },
+                { questionA: "A: Could you recommend a good Italian restaurant around here?", questionB: "B: _______", options: ["1. I prefer Japanese food.", "2. The restaurant is closed on Mondays.", "3. There's one called 'La Vita' just down the street. Their pasta is excellent.", "4. I made a reservation for two."], correct: 3, explanation: "おすすめのレストランを尋ねられ、具体的な店名と特徴を挙げています。" },
+                { questionA: "A: This traffic jam is terrible. We're going to be late.", questionB: "B: _______", options: ["1. Let's take a shortcut.", "2. The weather forecast was wrong.", "3. We should have left earlier.", "4. I enjoy driving in the city."], correct: 3, explanation: "渋滞で遅刻しそうな状況に対し、「もっと早く出発すべきだった」と後悔の念を示しています。" },
+                { questionA: "A: How was the job interview?", questionB: "B: _______", options: ["1. I have an interview tomorrow.", "2. I think it went quite well, but I won't know for sure until next week.", "3. The company is located downtown.", "4. I need to update my resume."], correct: 2, explanation: "面接の出来を尋ねられ、手応えはあったものの結果はまだ分からないと答えています。" },
+                { questionA: "A: I can't seem to connect to the Wi-Fi.", questionB: "B: _______", options: ["1. The internet speed is very fast.", "2. I forgot my password.", "3. Did you try restarting the router?", "4. Let's watch a movie online."], correct: 3, explanation: "Wi-Fiに接続できない問題に対し、具体的な解決策（ルーターの再起動）を提案しています。" },
+                { questionA: "A: What are your plans for the summer vacation?", questionB: "B: _______", options: ["1. I'm thinking of backpacking through Southeast Asia.", "2. Summer is my favorite season.", "3. I have to work overtime.", "4. The flight tickets were expensive."], correct: 1, explanation: "夏休みの計画を尋ねられ、具体的な旅行プランを答えています。" },
+                { questionA: "A: This report is due by 5 p.m. today.", questionB: "B: _______", options: ["1. I've already submitted it.", "2. Can I get an extension?", "3. The deadline was yesterday.", "4. I need more data to complete it."], correct: 4, explanation: "締め切りを伝えられ、完成に必要なデータが不足していることを述べています。（他の選択肢も状況によってはあり得る）" },
+                { questionA: "A: The air conditioner doesn't seem to be working properly.", questionB: "B: _______", options: ["1. It's quite hot today.", "2. I prefer using a fan.", "3. Maybe we should call maintenance.", "4. Let's open the window."], correct: 3, explanation: "エアコンの不調に対し、修理を依頼することを提案しています。" },
+                { questionA: "A: I'm really stressed out about the upcoming exam.", questionB: "B: _______", options: ["1. The exam was easier than I expected.", "2. Studying hard is important.", "3. You should take a break and relax for a bit.", "4. I got a perfect score."], correct: 3, explanation: "ストレスを感じている相手に対し、休憩とリラックスを勧めるアドバイスをしています。" },
+                { questionA: "A: Do you mind if I borrow your charger for a while?", questionB: "B: _______", options: ["1. My phone battery is low too.", "2. Not at all. Go ahead.", "3. This charger is brand new.", "4. Where did you buy it?"], correct: 2, explanation: "物を借りる許可を求める Do you mind if I...? に対し、「どうぞ」と快諾する表現です。" },
+                { questionA: "A: The new software update has some bugs.", questionB: "B: _______", options: ["1. I haven't updated it yet.", "2. This software is very user-friendly.", "3. The IT department is working on a patch.", "4. Let's install it now."], correct: 3, explanation: "ソフトウェアのバグについて、IT部門が修正パッチに取り組んでいるという情報を提供しています。" },
+                { questionA: "A: I'm looking for a gift for my sister's birthday.", questionB: "B: _______", options: ["1. Her birthday was last month.", "2. I need to buy wrapping paper.", "3. What does she like?", "4. Let's go shopping together."], correct: 3, explanation: "プレゼントを探している相手に対し、相手の好みを尋ねてアドバイスしようとしています。" },
+                { questionA: "A: We need to cut down on our expenses.", questionB: "B: _______", options: ["1. Let's start by reducing our dining-out budget.", "2. We received a bonus last month.", "3. The company's profits are increasing.", "4. How much did you spend?"], correct: 1, explanation: "経費削減の必要性に対し、具体的な削減案（外食費の削減）を提案しています。" },
+                { questionA: "A: The train was delayed due to an accident.", questionB: "B: _______", options: ["1. I always take the bus.", "2. That explains why you're late.", "3. The train schedule has changed.", "4. Let's check the platform number."], correct: 2, explanation: "電車の遅延理由を聞き、相手の遅刻理由が分かったと納得する反応です。" },
+                { questionA: "A: I'm not satisfied with the quality of this product.", questionB: "B: _______", options: ["1. I recommend this brand.", "2. It was on sale last week.", "3. You should contact customer service for a refund or exchange.", "4. Where did you purchase it?"], correct: 3, explanation: "製品の品質に不満を持つ相手に対し、カスタマーサービスへの連絡（返金・交換）を勧めています。" },
+                { questionA: "A: Could you possibly work overtime tonight? We have an urgent task.", questionB: "B: _______", options: ["1. I usually leave the office at 6 p.m.", "2. What time do you need me until?", "3. The task is quite challenging.", "4. I have plans this evening, unfortunately."], correct: 4, explanation: "残業依頼に対し、残念ながら今晩は予定があると丁寧に断っています。（2も状況により可）" },
+                { questionA: "A: The company picnic is scheduled for next Saturday.", questionB: "B: _______", options: ["1. Where was the picnic held last year?", "2. I hope the weather holds up.", "3. We need to prepare some food.", "4. I can't attend due to a prior commitment."], correct: 2, explanation: "ピクニックの予定を聞き、天気が持つことを願う一般的な反応です。（4も可）" },
+                { questionA: "A: I'm trying to learn Spanish, but it's harder than I thought.", questionB: "B: _______", options: ["1. Spanish is spoken in many countries.", "2. I took French in high school.", "3. Keep practicing! Consistency is key.", "4. Have you tried using language learning apps?"], correct: 3, explanation: "言語学習の難しさを話す相手に対し、「練習を続けて！継続が鍵だよ」と励ましています。（4も良いアドバイス）" },
+                { questionA: "A: We seem to have run out of printer paper.", questionB: "B: _______", options: ["1. The printer is out of ink too.", "2. Can you print this document for me?", "3. I'll go order some more right away.", "4. This printer model is quite old."], correct: 3, explanation: "備品（印刷用紙）切れに対し、すぐに注文しに行くと対応策を述べています。" },
+                { questionA: "A: The client wasn't happy with our proposal.", questionB: "B: _______", options: ["1. Let's celebrate our success.", "2. The client signed the contract.", "3. That's disappointing. What were their main concerns?", "4. Our proposal was very detailed."], correct: 3, explanation: "顧客が提案に不満だったという報告に対し、落胆しつつも具体的な懸念点を尋ねています。" },
+                { questionA: "A: I think we should reconsider our marketing strategy.", questionB: "B: _______", options: ["1. Our current strategy is performing well.", "2. The marketing budget has been approved.", "3. I agree. Do you have any specific ideas in mind?", "4. Let's launch the campaign next week."], correct: 3, explanation: "戦略見直しの提案に対し、同意し、具体的なアイデアがあるか尋ねています。" },
+                { questionA: "A: Sorry I'm late. I got stuck in a meeting.", questionB: "B: _______", options: ["1. The meeting was very productive.", "2. No problem. We were just about to start.", "3. You should manage your time better.", "4. What time did the meeting end?"], correct: 2, explanation: "遅刻の謝罪に対し、「問題ないよ、ちょうど始めるところだった」と相手を気遣う返答です。" },
+                { questionA: "A: Have you heard back about the loan application?", questionB: "B: _______", options: ["1. I need to borrow some money.", "2. The interest rate is quite high.", "3. Not yet. They said it would take about a week.", "4. My application was rejected."], correct: 3, explanation: "ローンの申請結果について聞かれ、まだ連絡がなく、1週間ほどかかると言われたと答えています。" },
+                { questionA: "A: This suitcase is too heavy to lift into the overhead bin.", questionB: "B: _______", options: ["1. You should check it in next time.", "2. Is this your final destination?", "3. Let me give you a hand with that.", "4. The flight is fully booked."], correct: 3, explanation: "重い荷物で困っている相手に対し、「手伝いましょう」と申し出る親切な表現です。" },
+                { questionA: "A: We need to book flights for the business trip to London.", questionB: "B: _______", options: ["1. London is a fascinating city.", "2. The trip has been canceled.", "3. Have you checked the prices for different airlines?", "4. I've already booked my hotel."], correct: 3, explanation: "航空券予約の必要性に対し、異なる航空会社の価格を確認したか尋ね、コスト意識を示唆しています。" },
+                { questionA: "A: I'm afraid I double-booked myself for Thursday afternoon.", questionB: "B: _______", options: ["1. Thursday's weather forecast looks good.", "2. My schedule is completely full.", "3. Which appointment do you need to reschedule?", "4. Let's meet on Friday instead."], correct: 3, explanation: "ダブルブッキングしてしまった相手に対し、どちらの予定を変更する必要があるか尋ねています。" },
+                { questionA: "A: The government announced new environmental regulations.", questionB: "B: _______", options: ["1. Environmental protection is crucial.", "2. We need to ensure our company complies with them.", "3. The announcement was made yesterday.", "4. I read about it in the newspaper."], correct: 2, explanation: "新しい環境規制の発表に対し、自社がそれらを遵守する必要がある、とビジネス上の影響に言及しています。" },
+                { questionA: "A: My computer crashed, and I lost all the data I was working on.", questionB: "B: _______", options: ["1. You should buy a new computer.", "2. Try restarting it again.", "3. That's terrible! Didn't you back it up?", "4. What software were you using?"], correct: 3, explanation: "データ消失の報告に対し、同情しつつもバックアップの有無を尋ねています。" },
+                { questionA: "A: Attendance at the workshop is mandatory for all employees.", questionB: "B: _______", options: ["1. The workshop topic sounds interesting.", "2. Can I attend it online?", "3. I see. What time does it start?", "4. I have already registered."], correct: 3, explanation: "ワークショップへの参加が必須であることを受け、開始時間を確認しています。" }
+          ],
+          '1級': [
+                // (Correct answer distribution adjusted)
+                { questionA: "A: The recent downturn in the stock market has significantly impacted our portfolio.", questionB: "B: Indeed. _______", options: ["1. We need to diversify our investments further to mitigate risk.", "2. Perhaps we should consider short-selling some assets.", "3. Market fluctuations are inevitable in the long run.", "4. I suggest we consult with our financial advisor immediately."], correct: 4, explanation: "ポートフォリオへの影響という深刻な状況に対し、即座に専門家（財務アドバイザー）に相談することを提案するのが最も実践的です。(1, 2, 3も関連する意見)" },
+                { questionA: "A: The ongoing negotiations for the merger seem to have hit a snag.", questionB: "B: _______", options: ["1. Mergers often involve complex legal procedures.", "2. What seems to be the primary point of contention?", "3. Let's hope both parties can find common ground soon.", "4. The potential synergies are quite substantial."], correct: 2, explanation: "合併交渉の停滞に対し、対立の主要な論点は何かを具体的に尋ね、問題解決の糸口を探ろうとしています。" },
+                { questionA: "A: Implementing this new AI-driven automation system could streamline our workflow, but the initial investment is considerable.", questionB: "B: _______", options: ["1. Will it necessitate significant retraining for the staff?", "2. We need a thorough cost-benefit analysis before proceeding.", "3. Let's explore phased implementation to manage the cost.", "4. The long-term efficiency gains might outweigh the upfront expense."], correct: 2, explanation: "高額な初期投資が必要なシステム導入に対し、費用対効果分析の必要性を指摘するのが最も論理的な最初のステップです。(1, 3, 4も重要な検討事項)" },
+                { questionA: "A: The geopolitical instability in that region is causing disruptions to our supply chain.", questionB: "B: _______", options: ["1. How long are these disruptions projected to last?", "2. This highlights the vulnerability of globalized supply networks.", "3. We should explore alternative sourcing options immediately.", "4. We need to factor potential delays into our production schedule."], correct: 3, explanation: "サプライチェーンの混乱に対し、代替の調達先を探すという具体的な対策を即座に提案しています。" },
+                { questionA: "A: Our competitor just launched a product with features very similar to our upcoming release.", questionB: "B: _______", options: ["1. How did they manage to develop it so quickly?", "2. We need to emphasize our unique selling propositions more strongly.", "3. This calls for an urgent review of our go-to-market strategy.", "4. Perhaps we should expedite our launch date."], correct: 3, explanation: "競合の新製品発売という脅威に対し、市場投入戦略の緊急見直しを提案するのが最も包括的な対応です。(2, 4も戦略の一部)" },
+                { questionA: "A: The results from the clinical trial's third phase are not as conclusive as we had hoped.", questionB: "B: _______", options: ["1. Does this jeopardize our chances of regulatory approval?", "2. Let's analyze the subgroup data more closely for any positive trends.", "3. We may need to conduct further studies to gather more robust data.", "4. This is a significant setback for the research team."], correct: 3, explanation: "臨床試験の結果が期待外れだった状況に対し、より確かなデータを集めるための追加研究の必要性を示唆するのが科学的な対応です。(1, 2も関連する懸念・行動)" },
+                { questionA: "A: There's been a significant data breach in our customer database.", questionB: "B: _______", options: ["1. We must notify the affected customers and regulatory bodies immediately.", "2. What security measures failed to prevent this?", "3. This could severely damage our brand reputation.", "4. We need to activate our incident response plan right away."], correct: 4, explanation: "データ侵害という緊急事態に対し、インシデント対応計画を即座に発動させるのが最優先事項です。(1, 2, 3はその後の重要なステップ)" },
+                { questionA: "A: The proposed carbon tax will likely increase our operational costs substantially.", questionB: "B: _______", options: ["1. Let's investigate investments in energy-efficient technologies.", "2. This might accelerate our transition to renewable energy sources.", "3. We need to assess the financial impact across all departments.", "4. How can we pass these costs on without losing competitiveness?"], correct: 3, explanation: "炭素税導入によるコスト増に対し、まず全部門にわたる財務的影響を評価する必要がある、というのが最初のステップです。(1, 2, 4は影響評価後の検討事項)" },
+                { questionA: "A: Activist investors are pushing for major changes to the company's board structure.", questionB: "B: _______", options: ["1. We need to understand their specific demands and rationale.", "2. How much support do they have among other shareholders?", "3. This could lead to a proxy fight if we don't engage constructively.", "4. Our investor relations team needs to formulate a response strategy."], correct: 4, explanation: "物言う株主からの圧力に対し、IRチームが対応戦略を策定する必要がある、というのが組織的な対応です。(1, 2, 3はその戦略策定に必要な情報・考慮事項)" },
+                { questionA: "A: The demographic shift towards an aging population presents both challenges and opportunities for our healthcare services.", questionB: "B: _______", options: ["1. This trend will likely increase demand for long-term care facilities.", "2. We need to adapt our service offerings to cater to geriatric needs.", "3. Are our current staffing levels adequate to handle this shift?", "4. There's a growing market for home healthcare technology."], correct: 2, explanation: "高齢化社会という人口動態の変化に対し、高齢者のニーズに合わせてサービス提供を適応させる必要性を指摘するのが直接的な対応です。(1, 3, 4も関連する影響・機会)" },
+                { questionA: "A: The intellectual property lawsuit filed against us could have serious financial repercussions.", questionB: "B: _______", options: ["1. What are the potential damages if we lose the case?", "2. Our legal team needs to evaluate the strength of their claims.", "3. Let's explore the possibility of an out-of-court settlement.", "4. We must ensure our R&D processes rigorously respect IP rights going forward."], correct: 2, explanation: "知財訴訟に対し、まず法務チームが相手の主張の妥当性を評価することが不可欠です。(1, 3, 4はその後のステップ)" },
+                { questionA: "A: The adoption rate of our new subscription model is lagging behind projections.", questionB: "B: _______", options: ["1. Is the pricing perceived as too high or the value proposition unclear?", "2. We need to analyze the customer feedback to understand the barriers.", "3. Perhaps our marketing efforts aren't reaching the target audience effectively.", "4. Let's consider offering a limited-time promotional discount."], correct: 2, explanation: "新モデルの普及率低迷に対し、顧客フィードバックを分析して障壁を理解することが問題解決の第一歩です。(1, 3, 4は分析後の仮説や対策)" },
+                { questionA: "A: Integrating the acquired company's culture with ours is proving more challenging than anticipated.", questionB: "B: _______", options: ["1. Are there specific areas where friction is most apparent?", "2. Clear communication about shared values and goals is crucial.", "3. We need dedicated workshops to foster mutual understanding and alignment.", "4. Perhaps we underestimated the cultural differences during due diligence."], correct: 3, explanation: "企業文化統合の困難に対し、相互理解と連携を促進するための専門ワークショップが必要だと具体的な解決策を提案しています。(1, 2, 4も関連する分析・反省)" },
+                { questionA: "A: The ethical implications of using AI in recruitment need careful consideration.", questionB: "B: _______", options: ["1. What safeguards can we implement to ensure transparency in the process?", "2. There's a risk of perpetuating existing societal inequalities.", "3. We must ensure the algorithms are free from bias and promote fairness.", "4. We should consult with ethics experts before full implementation."], correct: 3, explanation: "AI利用の倫理的影響に対し、アルゴリズムがバイアスフリーで公平性を促進することを保証する必要がある、と具体的な倫理要件を述べています。(1, 2, 4も重要な考慮点)" },
+                { questionA: "A: Fluctuations in currency exchange rates are affecting our international profit margins.", questionB: "B: _______", options: ["1. Can we adjust our pricing in foreign markets?", "2. This volatility makes financial forecasting difficult.", "3. We should consider hedging strategies to mitigate currency risk.", "4. Let's analyze the exposure in each currency we operate in."], correct: 3, explanation: "為替変動による利益率への影響に対し、為替リスクを軽減するためのヘッジ戦略を検討すべきだと提案しています。" },
+                { questionA: "A: The public backlash against our environmental record is growing.", questionB: "B: _______", options: ["1. We need a proactive communication strategy to address the concerns.", "2. What specific incidents triggered this recent wave of criticism?", "3. This negative publicity could impact sales and talent acquisition.", "4. We must demonstrate tangible improvements in our sustainability practices."], correct: 4, explanation: "環境問題への批判に対し、持続可能性への取り組みにおける具体的な改善を示す必要がある、と本質的な解決策を述べています。(1, 2, 3も重要)" },
+                { questionA: "A: The regulatory landscape for data privacy is becoming increasingly stringent globally.", questionB: "B: _______", options: ["1. Are we investing enough in data security and privacy training?", "2. Our compliance framework needs continuous updates to keep pace.", "3. Non-compliance could result in hefty fines and reputational damage.", "4. We need a designated data protection officer overseeing this."], correct: 2, explanation: "データプライバシー規制強化の流れに対し、コンプライアンス体制を継続的に更新する必要がある、と恒久的な対応策を述べています。" },
+                { questionA: "A: Employee burnout seems to be on the rise, impacting productivity and morale.", questionB: "B: _______", options: ["1. Perhaps we need to review workload distribution and resource allocation.", "2. Promoting work-life balance initiatives is essential.", "3. We should conduct an anonymous survey to identify the root causes.", "4. Let's offer more comprehensive mental health support programs."], correct: 3, explanation: "従業員の燃え尽き増加に対し、根本原因を特定するために匿名調査を実施すべきだと、問題特定のための具体的な行動を提案しています。(1, 2, 4は原因特定後の対策)" },
+                { questionA: "A: The shift to remote work has blurred the lines between professional and personal life for many.", questionB: "B: _______", options: ["1. Does this impact team collaboration and communication dynamics?", "2. Providing resources for setting up ergonomic home offices is important.", "3. Companies need to establish clear guidelines on working hours and availability.", "4. This requires a fundamental rethinking of traditional management styles."], correct: 3, explanation: "リモートワークによる公私混同に対し、企業が労働時間と対応可能時間に関する明確なガイドラインを設ける必要がある、と具体的な組織的対策を述べています。" },
+                { questionA: "A: Our traditional distribution channels are being disrupted by direct-to-consumer models.", questionB: "B: _______", options: ["1. How can we strengthen relationships with our existing channel partners?", "2. This shift requires significant changes in logistics and customer service.", "3. We need to evaluate the feasibility of launching our own D2C platform.", "4. Understanding the evolving consumer preferences is key."], correct: 3, explanation: "D2Cモデルによる既存チャネルの破壊に対し、自社D2Cプラットフォーム立ち上げの実現可能性を評価する必要がある、と直接的な対抗策の検討を提案しています。" },
+                { questionA: "A: Retaining top talent in this competitive market requires more than just competitive salaries.", questionB: "B: _______", options: ["1. Are our benefits packages and non-monetary perks attractive enough?", "2. Exit interviews could provide valuable insights into reasons for departure.", "3. We need to focus on fostering a positive work culture and offering growth opportunities.", "4. Investing in leadership development programs is crucial for retention."], correct: 3, explanation: "人材維持の課題に対し、良好な職場文化の醸成と成長機会の提供に焦点を当てる必要がある、と給与以外の重要な要素を指摘しています。" },
+                { questionA: "A: The increasing prevalence of misinformation online poses a threat to informed public discourse.", questionB: "B: _______", options: ["1. Social media platforms need more robust content moderation policies.", "2. Fact-checking organizations play a vital role, but their reach is limited.", "3. Media literacy education is crucial to help people critically evaluate information.", "4. This erosion of trust has far-reaching societal consequences."], correct: 3, explanation: "オンラインの誤情報蔓延に対し、人々が情報を批判的に評価するのを助けるメディアリテラシー教育が重要だと、根本的な解決策の一つを述べています。" },
+                { questionA: "A: Ensuring the resilience of critical infrastructure against cyberattacks is a national security priority.", questionB: "B: _______", options: ["1. Regular vulnerability assessments and penetration testing are essential.", "2. Developing rapid response and recovery plans is paramount.", "3. This requires close collaboration between government agencies and the private sector.", "4. International cooperation is needed to combat transnational cyber threats."], correct: 3, explanation: "重要インフラのサイバー攻撃耐性確保に対し、政府機関と民間セクター間の緊密な協力が必要だと、包括的なアプローチを述べています。" },
+                { questionA: "A: The transition to a circular economy necessitates fundamental changes in product design and consumption patterns.", questionB: "B: _______", options: ["1. Businesses need to explore innovative models like product-as-a-service.", "2. Consumer awareness and behavioral change are critical components.", "3. Designing products for durability, repairability, and recyclability is key.", "4. Governments can incentivize circular practices through policy measures."], correct: 3, explanation: "循環型経済への移行に対し、製品設計の段階で耐久性、修理可能性、リサイクル可能性を考慮することが鍵だと、具体的な設計思想を述べています。" },
+                { questionA: "A: Addressing global vaccine inequity is not only a moral imperative but also crucial for global health security.", questionB: "B: _______", options: ["1. Mechanisms like COVAX need increased funding and support.", "2. Overcoming logistical challenges in distribution is a major hurdle.", "3. Technology transfer and local manufacturing capacity building are vital.", "4. Vaccine hesitancy fueled by misinformation complicates efforts."], correct: 3, explanation: "ワクチン不平等の解消に対し、技術移転と現地製造能力の構築が不可欠だと、持続可能な解決策の一つを指摘しています。(1, 2, 4も重要な側面)" },
+                { questionA: "A: The long-term psychological effects of the pandemic on children and adolescents are a growing concern.", questionB: "B: _______", options: ["1. Early intervention programs are crucial to mitigate potential long-term issues.", "2. The impact of disrupted social development requires further study.", "3. Schools need increased resources for mental health support and counseling.", "4. Parental support and community involvement are also vital."], correct: 3, explanation: "パンデミックの子供への心理的影響に対し、学校におけるメンタルヘルス支援とカウンセリングのためのリソース増強が必要だと、具体的な対策を提案しています。" },
+                { questionA: "A: The potential of quantum computing to break current encryption standards poses a significant future risk.", questionB: "B: _______", options: ["1. It will likely take considerable time before scalable quantum computers become a reality.", "2. Governments and industries need to prepare for a post-quantum cryptographic transition.", "3. Research and development into quantum-resistant cryptography must be prioritized.", "4. This highlights the constant evolution of cybersecurity threats."], correct: 3, explanation: "量子コンピューティングによる暗号解読リスクに対し、耐量子暗号の研究開発を優先する必要がある、と直接的な対抗策を述べています。" },
+                { questionA: "A: Balancing economic development with biodiversity conservation remains a persistent global challenge.", questionB: "B: _______", options: ["1. Integrated land-use planning is essential to minimize habitat destruction.", "2. Community-based conservation initiatives often yield sustainable results.", "3. Valuing ecosystem services in economic decision-making can help.", "4. International agreements and funding mechanisms are crucial for transboundary issues."], correct: 3, explanation: "経済発展と生物多様性保全の両立に対し、生態系サービスを経済的意思決定において評価することが役立つ、と経済的なアプローチを提案しています。(1, 2, 4も重要)" },
+                { questionA: "A: The rise of the gig economy presents challenges regarding worker rights and social safety nets.", questionB: "B: _______", options: ["1. Debates continue on whether gig workers should be classified as employees or independent contractors.", "2. Ensuring fair wages and working conditions requires regulatory intervention.", "3. Portable benefits systems that are not tied to a single employer are needed.", "4. The flexibility offered by gig work appeals to many, despite the lack of security."], correct: 3, explanation: "ギグエコノミーの課題に対し、単一の雇用主に縛られないポータブルな福利厚生制度が必要だと、具体的な制度設計の方向性を示唆しています。" },
+                { questionA: "A: Achieving net-zero emissions by mid-century requires unprecedented global cooperation and technological innovation.", questionB: "B: _______", options: ["1. Carbon capture, utilization, and storage (CCUS) technologies will likely play a role.", "2. Policy frameworks that put a price on carbon are effective drivers of change.", "3. Massive investments in renewable energy infrastructure are fundamental.", "4. This transition demands significant societal and behavioral adjustments."], correct: 3, explanation: "ネットゼロ達成の課題に対し、再生可能エネルギーインフラへの大規模投資が基本である、と最も重要な要素の一つを指摘しています。(1, 2, 4も必要)" }
+          ]
+      };
+      // --- ▲▲▲ Quiz Data by Level (Correct Answer Distribution Adjusted) ▲▲▲ ---
+
+      const numberOfQuestions = 10; // Number of questions per quiz session
+      const passScore = 7; // Passing score
+
+      // --- Game State Variables ---
+      let selectedLevel = null;
+      let currentQuizData = [];
+      let currentQuestionIndex = 0;
+      let userAnswers = [];
+      let buttonRects = [];
+      let score = 0;
+      let quizFinished = false;
+      let retryCount = 1;
+      let retryButtonRect = null;
+      let startTime = null;
+      let endTime = null;
+      let elapsedTime = 0;
+      // --- Scrolling Variables ---
+      let scrollTop = 0;
+      let totalResultHeight = 0;
+      let maxScrollTop = 0;
+      let isDragging = false;
+      let startY = 0;
+      let startScrollTop = 0;
+      // --- Back to Top Button Rects ---
+      let backToTopButtonRectQuiz = null;
+      let backToTopButtonRectResult = null;
+
+      // --- Drawing Settings ---
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const buttonWidthRatio = 0.85;
+      const buttonHeight = 45;
+      const buttonMargin = 12;
+      const textPadding = 15;
+      const questionFontSize = 16;
+      const optionFontSize = 13;
+      const resultFontSize = 11;
+      const buttonColor = '#A0C4FF';
+      const resultLineHeight = resultFontSize * 1.4;
+      const retryButtonColor = '#FF9900';
+      // --- Back to Top Button Styles ---
+      const backToTopButtonColor = '#6c757d';
+      const backToTopButtonTextColor = '#ffffff';
+      const backToTopButtonWidth = 80;
+      const backToTopButtonHeight = 25;
+      const backToTopButtonPadding = 10;
+
+
+      // --- Fisher-Yates (Knuth) Shuffle ---
+      function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+      }
+
+      // --- Screen Display Functions ---
+      function showLevelSelectionScreen() {
+          levelSelectionDiv.style.display = 'block';
+          canvas.style.display = 'none';
+          certificateContainer.style.display = 'none';
+          // Ensure canvas listeners are removed when showing level selection
+          removeCanvasListeners();
+      }
+
+      function showQuizScreen() {
+          levelSelectionDiv.style.display = 'none';
+          canvas.style.display = 'block';
+          certificateContainer.style.display = 'none';
+          // Add quiz-specific listeners
+          addQuizListeners();
+      }
+
+      function showCertificateScreen() {
+          levelSelectionDiv.style.display = 'none';
+          canvas.style.display = 'none';
+          certificateContainer.style.display = 'flex';
+          // Ensure canvas listeners are removed
+          removeCanvasListeners();
+      }
+
+      // --- ▼▼▼ Listener Management Functions ▼▼▼ ---
+      function removeCanvasListeners() {
+          canvas.removeEventListener('click', handleQuizClick);
+          canvas.removeEventListener('click', handleResultClick);
+          canvas.removeEventListener('wheel', handleScroll);
+          canvas.removeEventListener('touchstart', handleTouchStart);
+          canvas.removeEventListener('touchmove', handleTouchMove);
+          canvas.removeEventListener('touchend', handleTouchEnd);
+          console.log("Canvas listeners removed."); // For debugging
+      }
+
+      function addQuizListeners() {
+          removeCanvasListeners(); // Remove any existing listeners first
+          canvas.addEventListener('click', handleQuizClick);
+          console.log("Quiz click listener added."); // For debugging
+      }
+
+      function addResultListeners() {
+          removeCanvasListeners(); // Remove any existing listeners first
+          canvas.addEventListener('click', handleResultClick);
+          canvas.addEventListener('wheel', handleScroll);
+          canvas.addEventListener('touchstart', handleTouchStart);
+          canvas.addEventListener('touchmove', handleTouchMove);
+          canvas.addEventListener('touchend', handleTouchEnd);
+          console.log("Result listeners added."); // For debugging
+      }
+      // --- ▲▲▲ Listener Management Functions ▲▲▲ ---
+
+
+      // --- Start Game Function ---
+      function startGame(level) {
+          console.log(`Starting game for level: ${level}`); // Debug log
+          selectedLevel = level;
+          const rawQuizData = quizDataByLevel[selectedLevel];
+
+          if (!rawQuizData) {
+              alert(`エラー: 「${selectedLevel}」のクイズデータが見つかりません。`);
+              showLevelSelectionScreen();
+              return;
+          }
+
+          let shuffledData = [...rawQuizData];
+          shuffleArray(shuffledData);
+          currentQuizData = shuffledData.slice(0, numberOfQuestions);
+
+          // Reset game state
+          currentQuestionIndex = 0;
+          userAnswers = [];
+          buttonRects = [];
+          score = 0;
+          quizFinished = false;
+          startTime = null;
+          endTime = null;
+          elapsedTime = 0;
+          scrollTop = 0;
+          totalResultHeight = 0;
+          maxScrollTop = 0;
+          isDragging = false;
+          retryButtonRect = null;
+          backToTopButtonRectQuiz = null;
+          backToTopButtonRectResult = null;
+
+          canvas.style.cursor = 'pointer';
+          showQuizScreen(); // This now adds the correct listener
+          drawQuiz();
+      }
+
+      // --- Draw Quiz Function ---
+      function drawQuiz() {
+        buttonRects = [];
+        backToTopButtonRectQuiz = null;
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+        const currentQuestion = currentQuizData[currentQuestionIndex];
+        if (!currentQuestion) return;
+
+        const questionText = `${currentQuestion.questionA}\n${currentQuestion.questionB}`;
+        const options = currentQuestion.options;
+
+        // --- Draw Back to Top Button (Top Right) ---
+        const bttX = canvasWidth - backToTopButtonWidth - backToTopButtonPadding;
+        const bttY = backToTopButtonPadding;
+        ctx.fillStyle = backToTopButtonColor;
+        ctx.fillRect(bttX, bttY, backToTopButtonWidth, backToTopButtonHeight);
+        ctx.fillStyle = backToTopButtonTextColor;
+        ctx.font = `bold ${optionFontSize - 1}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('トップへ戻る', bttX + backToTopButtonWidth / 2, bttY + backToTopButtonHeight / 2);
+        backToTopButtonRectQuiz = { x: bttX, y: bttY, width: backToTopButtonWidth, height: backToTopButtonHeight };
+
+        // Draw question info
+        ctx.fillStyle = '#555';
+        ctx.font = `bold ${questionFontSize - 2}px Arial`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        const infoY = (bttY + backToTopButtonHeight + 5 > 25) ? bttY + backToTopButtonHeight + 5 : 25;
+        ctx.fillText(`${selectedLevel} Q${currentQuestionIndex + 1}/${numberOfQuestions}. (Attempt: ${retryCount})`, 20, infoY);
+
+        // Draw question text
+        ctx.fillStyle = '#333';
+        ctx.font = `bold ${questionFontSize}px Arial`;
+        ctx.textAlign = 'center';
+        let currentY = infoY + 25;
+        const questionLines = questionText.split('\n');
+        questionLines.forEach(line => {
+            currentY = wrapText(line, canvasWidth / 2, currentY, canvasWidth * 0.9, questionFontSize * 1.4).nextY;
+        });
+        currentY += 25;
+
+        // Draw option buttons
+        ctx.font = `${optionFontSize}px Arial`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        const buttonWidth = canvasWidth * buttonWidthRatio;
+        const startX = (canvasWidth - buttonWidth) / 2;
+
+        for (let i = 0; i < options.length; i++) {
+          if (!options[i]) continue;
+          const buttonY = currentY + i * (buttonHeight + buttonMargin);
+          if (buttonY + buttonHeight > canvasHeight) break;
+
+          ctx.fillStyle = buttonColor;
+          ctx.beginPath();
+          ctx.moveTo(startX + 10, buttonY);
+          ctx.lineTo(startX + buttonWidth - 10, buttonY);
+          ctx.quadraticCurveTo(startX + buttonWidth, buttonY, startX + buttonWidth, buttonY + 10);
+          ctx.lineTo(startX + buttonWidth, buttonY + buttonHeight - 10);
+          ctx.quadraticCurveTo(startX + buttonWidth, buttonY + buttonHeight, startX + buttonWidth - 10, buttonY + buttonHeight);
+          ctx.lineTo(startX + 10, buttonY + buttonHeight);
+          ctx.quadraticCurveTo(startX, buttonY + buttonHeight, startX, buttonY + buttonHeight - 10);
+          ctx.lineTo(startX, buttonY + 10);
+          ctx.quadraticCurveTo(startX, buttonY, startX + 10, buttonY);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.fillStyle = '#000000';
+          wrapText(options[i], startX + textPadding, buttonY + buttonHeight / 2, buttonWidth - textPadding * 2, optionFontSize * 1.2, true);
+
+          buttonRects.push({ x: startX, y: buttonY, width: buttonWidth, height: buttonHeight, optionIndex: i + 1 });
+        }
+      }
+
+
+       // --- Handle Quiz Results Function ---
+       function handleResults() {
+            if (quizFinished) return;
+            quizFinished = true;
+            endTime = new Date();
+            // Remove quiz listener specifically
+            canvas.removeEventListener('click', handleQuizClick);
+            console.log("Quiz click listener removed after finishing."); // Debug log
+
+            score = 0;
+            for(let i = 0; i < currentQuizData.length; i++) {
+                if (userAnswers[i] === currentQuizData[i].correct) score++;
+            }
+
+            if (startTime) { elapsedTime = Math.round((endTime - startTime) / 1000); }
+            else { elapsedTime = 0; }
+
+            const isPassed = score >= passScore;
+            console.log(`Attempt ${retryCount} (${selectedLevel}) Finished. Score: ${score}/${currentQuizData.length} (${elapsedTime}s). ${isPassed ? 'Passed!' : 'Failed...'}`);
+
+            if (isPassed) {
+                displayCertificate(); // This calls showCertificateScreen which removes listeners
+            } else {
+                canvas.style.cursor = 'default';
+                addResultListeners(); // Add listeners for the result screen
+                drawFailedResults();
+            }
+       }
+
+       // --- Display Certificate Function ---
+       function displayCertificate() {
+           showCertificateScreen(); // Handles screen change and listener removal
+
+           const formattedDate = endTime.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
+           const formattedTime = endTime.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+
+           const certificateHTML = `
+               <div id="certificate">
+                   <h2>合格証</h2>
+                   <p>氏名:</p>
+                   <input type="text" id="userName" placeholder="お名前を入力してください">
+                   <p>あなたは英検${selectedLevel}レベル会話クイズにおいて、</p>
+                   <p><strong>${numberOfQuestions}問中 ${score}問正解</strong> の成績を収められました。</p>
+                   <p>（所要時間: ${elapsedTime}秒）</p>
+                   <p>これを証します。</p>
+                   <p><strong>解答日時: ${formattedDate} ${formattedTime}</strong></p>
+                   <button onclick="window.print()">印刷する</button>
+                   <button id="restartButton">もう一度挑戦する</button>
+                   <button id="levelSelectButton">レベル選択に戻る</button>
+               </div>
+           `;
+
+           const printInfoHTML = `
+               <div id="printInfo">
+                   <strong>印刷と保存について:</strong><br>
+                   上の「印刷する」ボタンを押すと、通常は印刷ダイアログが表示されます。<br>
+                   <span class="highlight">もしボタンを押してもダイアログが表示されない場合</span>は、お手数ですが以下の方法をお試しください：<br>
+                   - <strong>ブラウザのメニュー</strong>から「印刷」を選択する (例: Chromeなら右上の︙メニュー > 印刷)。<br>
+                   - このページ上で<strong>右クリック</strong>し、「印刷」を選択する。<br>
+                   <br>
+                   印刷ダイアログでは、プリンターを選んで紙に印刷したり、「PDFとして保存」などを選んでファイルとして保存できます。保存場所は通常、ダイアログで指定できます（指定しない場合はダウンロードフォルダなど）。
+               </div>
+           `;
+
+           certificateContainer.innerHTML = certificateHTML + printInfoHTML;
+
+           // Add listeners to HTML buttons inside the certificate
+           const restartButton = document.getElementById('restartButton');
+           if (restartButton) {
+               restartButton.addEventListener('click', restartCurrentLevel);
+           } else {
+                console.error("Restart button not found after insertion.");
+           }
+           const levelSelectButton = document.getElementById('levelSelectButton');
+            if (levelSelectButton) {
+                levelSelectButton.addEventListener('click', goToLevelSelection);
+            } else {
+                console.error("Level select button not found after insertion.");
+            }
+       }
+
+       // --- Draw Failed Results Function ---
+       function drawFailedResults() {
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+            ctx.save();
+            ctx.translate(0, -scrollTop);
+
+            totalResultHeight = 0;
+            retryButtonRect = null;
+            backToTopButtonRectResult = null;
+
+            // Draw Header, Failed message, Score, Time, Attempts
+            ctx.fillStyle = '#333';
+            ctx.font = `bold ${questionFontSize + 6}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            let currentY = 40;
+            ctx.fillText(`${selectedLevel} Result`, canvasWidth / 2, currentY);
+            currentY += 35;
+            ctx.font = `bold ${questionFontSize + 4}px Arial`;
+            ctx.fillStyle = 'red';
+            ctx.fillText('不合格...', canvasWidth / 2, currentY);
+            currentY += 35;
+            ctx.fillStyle = '#333';
+            ctx.font = `bold ${questionFontSize + 2}px Arial`;
+            ctx.fillText(`Score: ${score} / ${numberOfQuestions} (${elapsedTime} seconds)`, canvasWidth / 2, currentY);
+            currentY += 35;
+            ctx.font = `${resultFontSize + 1}px Arial`;
+            ctx.fillStyle = '#666';
+            ctx.fillText(`チャレンジ回数: ${retryCount}`, canvasWidth / 2, currentY);
+            currentY += 30;
+
+            // Draw detailed results
+            ctx.font = `${resultFontSize}px Arial`;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            const resultStartX = 25;
+            const resultWidth = canvasWidth - resultStartX * 2 - 10;
+
+            for(let i = 0; i < currentQuizData.length; i++) {
+                 const question = currentQuizData[i];
+                const userAnswerIndex = userAnswers[i] - 1;
+                const userAnswerText = (userAnswerIndex >= 0 && userAnswerIndex < question.options.length) ? question.options[userAnswerIndex] : "未回答";
+                const correctAnswerText = question.options[question.correct - 1];
+                const isCorrect = userAnswers[i] === question.correct;
+                let tempY = currentY;
+                ctx.fillStyle = isCorrect ? 'green' : 'red';
+                ctx.font = `bold ${resultFontSize}px Arial`;
+                tempY = wrapText(`Q${i + 1}. ${isCorrect ? 'Correct!' : 'Incorrect'}`, resultStartX, tempY, resultWidth, resultLineHeight).nextY;
+                ctx.font = `${resultFontSize}px Arial`;
+                ctx.fillStyle = '#555';
+                tempY = wrapText(`Q: ${question.questionA} ${question.questionB}`, resultStartX, tempY, resultWidth, resultLineHeight).nextY;
+                ctx.fillStyle = '#000';
+                tempY = wrapText(`Your Answer: ${userAnswerText}`, resultStartX, tempY, resultWidth, resultLineHeight).nextY;
+                if (!isCorrect) {
+                    ctx.fillStyle = 'green';
+                    tempY = wrapText(`Correct Answer: ${correctAnswerText}`, resultStartX, tempY, resultWidth, resultLineHeight).nextY;
+                }
+                ctx.fillStyle = '#888';
+                tempY = wrapText(`Explanation: ${question.explanation}`, resultStartX, tempY, resultWidth, resultLineHeight).nextY;
+                currentY = tempY + resultLineHeight * 0.8;
+            }
+
+            // --- Draw Buttons (Retry and Back to Top) ---
+            const buttonAreaY = currentY + 20;
+            const buttonSpacing = 20;
+            const resultButtonWidth = 150;
+            const resultButtonHeight = 40;
+            const totalButtonWidth = resultButtonWidth * 2 + buttonSpacing;
+            const buttonsStartX = (canvasWidth - totalButtonWidth) / 2;
+
+            // 1. Retry Button
+            const retryX = buttonsStartX;
+            const retryY = buttonAreaY;
+            ctx.fillStyle = retryButtonColor;
+            ctx.beginPath();
+            // Draw rounded rect
+            ctx.moveTo(retryX + 10, retryY);
+            ctx.lineTo(retryX + resultButtonWidth - 10, retryY);
+            ctx.quadraticCurveTo(retryX + resultButtonWidth, retryY, retryX + resultButtonWidth, retryY + 10);
+            ctx.lineTo(retryX + resultButtonWidth, retryY + resultButtonHeight - 10);
+            ctx.quadraticCurveTo(retryX + resultButtonWidth, retryY + resultButtonHeight, retryX + resultButtonWidth - 10, retryY + resultButtonHeight);
+            ctx.lineTo(retryX + 10, retryY + resultButtonHeight);
+            ctx.quadraticCurveTo(retryX, retryY + resultButtonHeight, retryX, retryY + resultButtonHeight - 10);
+            ctx.lineTo(retryX, retryY + 10);
+            ctx.quadraticCurveTo(retryX, retryY, retryX + 10, retryY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = 'white';
+            ctx.font = `bold ${optionFontSize + 1}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText("再チャレンジ", retryX + resultButtonWidth / 2, retryY + resultButtonHeight / 2);
+            retryButtonRect = { x: retryX, y: retryY, width: resultButtonWidth, height: resultButtonHeight };
+
+            // 2. Back to Top Button
+            const bttResultX = retryX + resultButtonWidth + buttonSpacing;
+            const bttResultY = buttonAreaY;
+            ctx.fillStyle = backToTopButtonColor;
+            ctx.beginPath();
+            // Draw rounded rect
+            ctx.moveTo(bttResultX + 10, bttResultY);
+            ctx.lineTo(bttResultX + resultButtonWidth - 10, bttResultY);
+            ctx.quadraticCurveTo(bttResultX + resultButtonWidth, bttResultY, bttResultX + resultButtonWidth, bttResultY + 10);
+            ctx.lineTo(bttResultX + resultButtonWidth, bttResultY + resultButtonHeight - 10);
+            ctx.quadraticCurveTo(bttResultX + resultButtonWidth, bttResultY + resultButtonHeight, bttResultX + resultButtonWidth - 10, bttResultY + resultButtonHeight);
+            ctx.lineTo(bttResultX + 10, bttResultY + resultButtonHeight);
+            ctx.quadraticCurveTo(bttResultX, bttResultY + resultButtonHeight, bttResultX, bttResultY + resultButtonHeight - 10);
+            ctx.lineTo(bttResultX, bttResultY + 10);
+            ctx.quadraticCurveTo(bttResultX, bttResultY, bttResultX + 10, bttResultY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = backToTopButtonTextColor;
+            ctx.font = `bold ${optionFontSize + 1}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText("トップへ戻る", bttResultX + resultButtonWidth / 2, bttResultY + resultButtonHeight / 2);
+            backToTopButtonRectResult = { x: bttResultX, y: bttResultY, width: resultButtonWidth, height: resultButtonHeight };
+
+            // Update total height
+            currentY = buttonAreaY + resultButtonHeight + 20;
+            totalResultHeight = currentY;
+            maxScrollTop = Math.max(0, totalResultHeight - canvasHeight);
+
+            ctx.restore(); // Restore context state
+
+            // Draw Scrollbar if needed
+            if (maxScrollTop > 0) {
+                const scrollbarWidth = 8;
+                const scrollbarX = canvasWidth - scrollbarWidth - 2;
+                const scrollbarHeight = canvasHeight * (canvasHeight / totalResultHeight);
+                const scrollbarY = (scrollTop / maxScrollTop) * (canvasHeight - scrollbarHeight);
+                ctx.fillStyle = '#ccc';
+                ctx.fillRect(scrollbarX, 0, scrollbarWidth, canvasHeight);
+                ctx.fillStyle = '#888';
+                ctx.fillRect(scrollbarX, scrollbarY, scrollbarWidth, scrollbarHeight);
+            }
+       }
+
+      // --- Quiz Click Handler ---
+      function handleQuizClick(event) {
+        // Check if Back to Top button was clicked first
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        if (backToTopButtonRectQuiz &&
+            x >= backToTopButtonRectQuiz.x && x <= backToTopButtonRectQuiz.x + backToTopButtonRectQuiz.width &&
+            y >= backToTopButtonRectQuiz.y && y <= backToTopButtonRectQuiz.y + backToTopButtonRectQuiz.height) {
+            console.log("Quiz: Back to Top button clicked. Coordinates:", x, y, "Rect:", backToTopButtonRectQuiz); // Debug log
+            if (confirm("クイズを中断してトップに戻りますか？\n（現在の解答状況は保存されません）")) {
+                console.log("Confirmation received. Going to level selection."); // Debug log
+                goToLevelSelection();
+            } else {
+                console.log("Confirmation denied."); // Debug log
+            }
+            return; // Stop processing
+        }
+
+        // If not Back to Top, proceed with answer checking
+        if (quizFinished) return; // Should not happen if listener is correct, but safety check
+
+        let buttonClicked = false;
+        for (const button of buttonRects) {
+          if (x >= button.x && x <= button.x + button.width && y >= button.y && y <= button.y + button.height) {
+            if (startTime === null) { startTime = new Date(); console.log("Timer started at:", startTime); }
+            userAnswers.push(button.optionIndex);
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuizData.length) {
+              drawQuiz();
+            } else {
+              handleResults();
+            }
+            buttonClicked = true;
+            break;
+          }
+        }
+        if (!buttonClicked && !backToTopButtonRectQuiz) { // Log if click missed all buttons
+            console.log("Quiz click missed all buttons. Coords:", x, y);
+        }
+      }
+
+      // --- Result Screen Click Handler ---
+      function handleResultClick(event) {
+          // Only active on failed screen
+          if (!quizFinished || score >= passScore) return;
+
+          const rect = canvas.getBoundingClientRect();
+          const x = event.clientX - rect.left;
+          const y = event.clientY - rect.top;
+          const adjustedY = y + scrollTop; // Adjust for scrolling
+
+          // Check Retry button
+          if (retryButtonRect &&
+              x >= retryButtonRect.x && x <= retryButtonRect.x + retryButtonRect.width &&
+              adjustedY >= retryButtonRect.y && adjustedY <= retryButtonRect.y + retryButtonRect.height) {
+              console.log("Result: Retry button clicked.");
+              restartCurrentLevel();
+              return;
+          }
+
+          // Check Back to Top button
+          if (backToTopButtonRectResult &&
+              x >= backToTopButtonRectResult.x && x <= backToTopButtonRectResult.x + backToTopButtonRectResult.width &&
+              adjustedY >= backToTopButtonRectResult.y && adjustedY <= backToTopButtonRectResult.y + backToTopButtonRectResult.height) {
+              console.log("Result: Back to Top button clicked.");
+              goToLevelSelection();
+              return;
+          }
+          // Log if click missed buttons on result screen
+          console.log("Result click missed buttons. Coords:", x, y, "Adjusted Y:", adjustedY);
+      }
+
+
+      // --- Scroll Handlers ---
+      function handleScroll(event) {
+          event.preventDefault();
+          if (!quizFinished || score >= passScore) return;
+          const delta = event.deltaY > 0 ? 40 : -40;
+          scrollTop += delta;
+          scrollTop = Math.max(0, Math.min(scrollTop, maxScrollTop));
+          drawFailedResults();
+      }
+      function handleTouchStart(event) {
+          event.preventDefault();
+           // Allow dragging only on the failed result screen
+          if (!quizFinished || score >= passScore || event.touches.length !== 1) {
+              isDragging = false; // Ensure dragging flag is false if not applicable
+              return;
+          }
+          isDragging = true;
+          startY = event.touches[0].clientY;
+          startScrollTop = scrollTop;
+          canvas.style.cursor = 'grabbing';
+      }
+      function handleTouchMove(event) {
+          event.preventDefault();
+          if (!isDragging || !quizFinished || score >= passScore || event.touches.length !== 1) return;
+          const currentY = event.touches[0].clientY;
+          const deltaY = currentY - startY;
+          scrollTop = startScrollTop - deltaY;
+          scrollTop = Math.max(0, Math.min(scrollTop, maxScrollTop));
+          drawFailedResults();
+      }
+      function handleTouchEnd(event) {
+          event.preventDefault();
+          const wasDragging = isDragging; // Store drag state before resetting
+          isDragging = false; // Reset drag state immediately
+
+          if (wasDragging) {
+              // If it was a drag, just reset cursor
+              canvas.style.cursor = 'default';
+          } else {
+              // If it wasn't a drag, treat it as a potential tap/click
+              if (quizFinished && score < passScore) {
+                  // Handle tap on result screen buttons
+                  if (event.changedTouches && event.changedTouches.length > 0) {
+                      const touch = event.changedTouches[0];
+                      const mockEvent = { clientX: touch.clientX, clientY: touch.clientY };
+                      handleResultClick(mockEvent); // Use result click handler
+                  }
+              } else if (!quizFinished) {
+                  // Handle tap on quiz screen buttons or back button
+                  if (event.changedTouches && event.changedTouches.length > 0) {
+                      const touch = event.changedTouches[0];
+                      const mockEvent = { clientX: touch.clientX, clientY: touch.clientY };
+                      handleQuizClick(mockEvent); // Use quiz click handler
+                  }
+              }
+               // Reset cursor if it was changed during touchstart but wasn't a drag
+              if (canvas.style.cursor === 'grabbing') {
+                   canvas.style.cursor = quizFinished ? 'default' : 'pointer';
+              }
+          }
+      }
+
+
+      // --- Text Wrapping Function (Unchanged) ---
+      function wrapText(text, x, y, maxWidth, lineHeight, centerVertically = false) {
+          const words = text.toString().split(' ');
+          let line = '';
+          let lines = [];
+          for (let n = 0; n < words.length; n++) {
+              let testLine = line + words[n] + ' ';
+              let metrics = ctx.measureText(testLine);
+              let testWidth = metrics.width;
+              if (testWidth > maxWidth && n > 0) {
+                  lines.push(line);
+                  line = words[n] + ' ';
+              } else {
+                  line = testLine;
+              }
+          }
+          lines.push(line);
+
+          let startY = y;
+          let totalHeight = lines.length * lineHeight;
+          if (centerVertically) {
+              startY = y - totalHeight / 2 + lineHeight / 2;
+          }
+
+          const originalBaseline = ctx.textBaseline;
+          if(centerVertically) ctx.textBaseline = 'middle';
+
+          for (let k = 0; k < lines.length; k++) {
+              let drawY = startY + k * lineHeight;
+              let drawX = x;
+              if (ctx.textAlign === 'center') {
+                  drawX = canvasWidth / 2;
+              }
+              ctx.fillText(lines[k].trim(), drawX, drawY);
+          }
+          ctx.textBaseline = originalBaseline;
+          return { nextY: startY + totalHeight, height: totalHeight };
+      }
+
+
+      // --- Retry and Level Selection Functions ---
+      function restartCurrentLevel() {
+          console.log(`Restarting level: ${selectedLevel}`);
+          retryCount++;
+          startGame(selectedLevel); // This will call showQuizScreen and add correct listeners
+      }
+
+      function goToLevelSelection() {
+          console.log("Returning to level selection.");
+          retryCount = 1;
+          selectedLevel = null;
+          // removeCanvasListeners(); // removeCanvasListeners is now called by showLevelSelectionScreen
+          showLevelSelectionScreen(); // This handles listener removal and screen change
+      }
+
+      // --- Application Initialization ---
+      function initializeApp() {
+          levelButtons.forEach(button => {
+              button.addEventListener('click', () => {
+                  const level = button.getAttribute('data-level');
+                  retryCount = 1;
+                  startGame(level);
+              });
+          });
+          showLevelSelectionScreen(); // Show initial screen
+      }
+
+      initializeApp(); // Start the application
+
+    };
+  </script>
+</body>
+</html>
